@@ -1,0 +1,68 @@
+Date =
+ADDCOLUMNS (
+    CALENDAR (DATE(2020, 1, 1), DATE(2024, 12, 31)),
+    "Day_Of_Month", DAY([Date]),
+    "Month_Number_Of_Year", MONTH([Date]),
+    "Year", YEAR([Date]),
+    "Day_Of_Week_Number", WEEKDAY([Date], 2),
+    "Month_Name", FORMAT([Date], "MMMM"),
+    "Day_Name", FORMAT([Date], "dddd"),
+    "Start_of_Week", [Date] - WEEKDAY([Date], 2) + 1,
+    "Start_of_Month", DATE(YEAR([Date]), MONTH([Date]), 1),
+    "Start_of_Quarter", DATE(YEAR([Date]), (INT((MONTH([Date]) - 1)/3) * 3) + 1, 1),
+    "Start_of_Year", DATE(YEAR([Date]), 1, 1),
+    "Quarter", QUARTER([Date]),
+    "Weekend", IF(WEEKDAY([Date], 2) >= 6, "Weekend", "Weekday"),
+    "Month_Short", FORMAT([Date], "MMM")
+)
+
+---- New version for dynamic date depend on date_actual column in FactTable
+
+Date =
+VAR _min = MINX(ALL('FactTable'), 'FactTable'[date_actual])
+VAR _max = MAXX(ALL('FactTable'), 'FactTable'[date_actual])
+RETURN
+ADDCOLUMNS ( CALENDAR(_min, _max),
+            … 
+            )
+
+---- After that:
+Relationships → link Date[Date] to your fact table’s date column.
+Done. You now have a dynamic, compressed calendar that supports all the standard DAX time-intelligence functions.
+
+
+----------------------------------- full version of dynamic Dax Date table relate multi column in 2 fact table
+
+Date =
+VAR _AllDates =
+    UNION (
+        SELECTCOLUMNS ( 'inbound', "d", 'inbound'[upload_date] ),
+        SELECTCOLUMNS ( 'inbound', "d", 'inbound'[good_issue_date] ),
+        SELECTCOLUMNS ( 'inbound', "d", 'inbound'[good_receipt_date] ),
+        SELECTCOLUMNS ( 'outbound', "d", 'outbound'[order_date] ),
+        SELECTCOLUMNS ( 'outbound', "d", 'outbound'[delivery_date] ),
+        SELECTCOLUMNS ( 'outbound', "d", 'outbound'[post_date] )
+    )
+VAR _MinDate = MINX ( _AllDates, [d] )
+VAR _MaxDate = MAXX ( _AllDates, [d] )
+RETURN
+ADDCOLUMNS (
+    CALENDAR ( _MinDate, _MaxDate ),
+    "Day_Of_Month", DAY([Date]),
+    "Month_Number_Of_Year", MONTH([Date]),
+    "Year", YEAR([Date]),
+    "Day_Of_Week_Number", WEEKDAY([Date], 2),
+    "Month_Name", FORMAT([Date], "MMMM"),
+    "Day_Name", FORMAT([Date], "dddd"),
+    "Start_of_Week", [Date] - WEEKDAY([Date], 2) + 1,
+    "Start_of_Month", DATE(YEAR([Date]), MONTH([Date]), 1),
+    "Start_of_Quarter", DATE(YEAR([Date]), (INT((MONTH([Date]) - 1)/3) * 3) + 1, 1),
+    "Start_of_Year", DATE(YEAR([Date]), 1, 1),
+    "Quarter", QUARTER([Date]),
+    "Weekend", IF(WEEKDAY([Date], 2) >= 6, "Weekend", "Weekday"),
+    "Month_Short", FORMAT([Date], "MMM")
+)
+
+
+
+
