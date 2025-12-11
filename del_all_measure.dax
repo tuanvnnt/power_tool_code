@@ -1,0 +1,11 @@
+// Delete all measures
+foreach (var m in Model.AllMeasures.ToList())
+{
+    m.Delete();
+}
+
+// Delete all calculation groups (if any)
+foreach (var cg in Model.CalculationGroups.ToList())
+{
+    cg.Delete();
+}
