@@ -1,0 +1,29 @@
+dim_date = 
+VAR _AllDates =
+    UNION (
+        SELECTCOLUMNS ( 'vw_agg_cont', "d", 'vw_agg_cont'[gi_date] ),
+        SELECTCOLUMNS ( 'vw_agg_cont', "d", 'vw_agg_cont'[gr_date] ),
+        SELECTCOLUMNS ( 'vw_agg_inbound', "d", 'vw_agg_inbound'[gi_date] ),
+        SELECTCOLUMNS ( 'vw_agg_inbound', "d", 'vw_agg_inbound'[gr_date] ),
+        SELECTCOLUMNS ( 'vw_agg_outbound', "d", 'vw_agg_outbound'[gi_date] ),
+        SELECTCOLUMNS ( 'vw_agg_outbound', "d", 'vw_agg_outbound'[gr_date] )
+    )
+VAR _MinDate = MINX ( _AllDates, [d] )
+VAR _MaxDate = MAXX ( _AllDates, [d] )
+RETURN
+ADDCOLUMNS (
+    CALENDAR ( _MinDate, _MaxDate ),
+    "Day_Of_Month", DAY([Date]),
+    "Month_Number_Of_Year", MONTH([Date]),
+    "Year", YEAR([Date]),
+    "Day_Of_Week_Number", WEEKDAY([Date], 2),
+    "Month_Name", FORMAT([Date], "MMMM"),
+    "Day_Name", FORMAT([Date], "dddd"),
+    "Start_of_Week", [Date] - WEEKDAY([Date], 2) + 1,
+    "Start_of_Month", DATE(YEAR([Date]), MONTH([Date]), 1),
+    "Start_of_Quarter", DATE(YEAR([Date]), (INT((MONTH([Date]) - 1)/3) * 3) + 1, 1),
+    "Start_of_Year", DATE(YEAR([Date]), 1, 1),
+    "Quarter", QUARTER([Date]),
+    "Weekend", IF(WEEKDAY([Date], 2) >= 6, "Weekend", "Weekday"),
+    "Month_Short", FORMAT([Date], "MMM")
+)
